@@ -1,14 +1,15 @@
-# Use the official .NET image from Microsoft
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+# Use the official .NET 9 image from Microsoft
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY ["dotnet-app/dotnet-app.csproj", "dotnet-app/"]
-RUN dotnet restore "dotnet-app/dotnet-app.csproj"
+# Update the COPY statement to reflect the correct file location
+COPY ["dotnet-app.csproj", "./"]  # Copy from the root to the current directory in the container
+RUN dotnet restore "dotnet-app.csproj"
 COPY . .
-WORKDIR "/src/dotnet-app"
+WORKDIR "/src"
 RUN dotnet build "dotnet-app.csproj" -c Release -o /app/build
 
 FROM build AS publish
