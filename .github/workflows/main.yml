@@ -1,0 +1,63 @@
+name: Trigger Centralized CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to `main` branch (or change based on your needs)
+
+  workflow_dispatch:  # Manual trigger option from the GitHub UI
+    inputs:
+      repo_name:
+        description: 'Repository Name (e.g., dotnet-app, python-app, etc.)'
+        required: true
+        default: 'dotnet-app'
+      ref:
+        description: 'Git Reference (e.g., refs/heads/main)'
+        required: true
+        default: 'refs/heads/main'
+      app_language:
+        description: 'Application Language (dotnet, java, python)'
+        required: true
+        default: 'dotnet'
+      environment:
+        description: 'Deployment Environment (dev, prod)'
+        required: true
+        default: 'prod'
+      repo_link:
+        description: 'Repository Link (e.g., https://github.com/krishnakekan09/dotnet_app)'
+        required: true
+        default: 'https://github.com/krishnakekan09/dotnet_app'
+
+jobs:
+  trigger_central_pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Trigger Central CI/CD Pipeline using repository_dispatch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
+        run: |
+          echo "Triggering repository_dispatch in the 'microservices' repo with the following details:"
+          echo "Repository: ${{ github.event.inputs.repo_name }}"
+          echo "Reference: ${{ github.event.inputs.ref }}"
+          echo "App Language: ${{ github.event.inputs.app_language }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Repo Link: ${{ github.event.inputs.repo_link }}"
+
+          # Send the repository_dispatch event to the central repository (microservices)
+          curl -X POST https://api.github.com/repos/krishnakekan09/microservices/dispatches \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{
+                  "event_type": "ci_cd_trigger", 
+                  "client_payload": {
+                    "repo_name": "${{ github.event.inputs.repo_name }}", 
+                    "ref": "${{ github.event.inputs.ref }}",
+                    "app_language": "${{ github.event.inputs.app_language }}",
+                    "environment": "${{ github.event.inputs.environment }}",
+                    "repo_link": "${{ github.event.inputs.repo_link }}"
+                  }
+                }'
